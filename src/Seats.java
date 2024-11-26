@@ -10,43 +10,47 @@ public class Seats extends Tickets {
         super(VIPTickets, RegTickets);
         this.VIPseats = VIPseats;
         this.REGseats = REGseats;
-        seatArrangement = new String[rows][cols];
+        seatArrangement = new String[5][5];
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
                 seatArrangement[i][j] = "[0]";
             }
         }
     }
 
-    public boolean bookSeat(int type) {
-        if (type == 1 && VIPseats > 0) {
-            for (int i = 0; i < seatArrangement.length; i++) {
-                for (int j = 0; j < seatArrangement[i].length; j++) {
-                    if (seatArrangement[i][j].equals("[0]")) {
-                        seatArrangement[i][j] = "[X]";
-                        VIPseats--;
-                        return true;
-                    }
-                }
-            }
-        } else if (type == 2 && REGseats > 0) {
-            for (int i = 0; i < seatArrangement.length; i++) {
-                for (int j = 0; j < seatArrangement[i].length; j++) {
-                    if (seatArrangement[i][j].equals("[0]")) {
-                        seatArrangement[i][j] = "[X]";
-                        REGseats--;
-                        return true;
-                    }
-                }
-            }
+    public boolean bookSeat(int row, int col, int type) {
+        if (type == 1 && (row < 0 || row >= 2)) {
+            System.out.println("Invalid row for VIP seats. Please choose a row between 1 and 2.");
+            return false;
+        } else if (type == 2 && (row < 2 || row >= 5)) {
+            System.out.println("Invalid row for Regular seats. Please choose a row between 3 and 5.");
+            return false;
         }
-        return false;
+
+        if (row < 0 || row >= seatArrangement.length || col < 0 || col >= seatArrangement[row].length) {
+            System.out.println("Invalid seat location. Please try again.");
+            return false;
+        }
+
+        if (seatArrangement[row][col].equals("[0]")) {
+            seatArrangement[row][col] = "[X]";
+            if (type == 1) {
+                VIPseats--;
+            } else if (type == 2) {
+                REGseats--;
+            }
+            System.out.println("Seat " + (row * 5 + col + 1) + " booked successfully.");
+            return true;
+        } else {
+            System.out.println("Seat already booked. Please choose another.");
+            return false;
+        }
     }
 
     public void displaySeats() {
         System.out.println("\nVIP Section:");
-        for (int i = 0; i < seatArrangement.length / 2; i++) {
+        for (int i = 0; i < 2; i++) {
             for (String seat : seatArrangement[i]) {
                 System.out.print(seat + " ");
             }
@@ -54,7 +58,7 @@ public class Seats extends Tickets {
         }
 
         System.out.println("\nRegular Section:");
-        for (int i = seatArrangement.length / 2; i < seatArrangement.length; i++) {
+        for (int i = 2; i < 5; i++) {
             for (String seat : seatArrangement[i]) {
                 System.out.print(seat + " ");
             }
@@ -62,28 +66,20 @@ public class Seats extends Tickets {
         }
     }
 
-    public void loadSeatsFromFile(String filename) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+    public void loadSeatsFromFile(String fileName) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             String line;
             int row = 0;
-            while ((line = reader.readLine()) != null && row < seatArrangement.length) {
+
+            while ((line = br.readLine()) != null) {
                 String[] seatData = line.split(" ");
-                System.arraycopy(seatData, 0, seatArrangement[row], 0, seatData.length);
+                for (int col = 0; col < seatData.length; col++) {
+                    seatArrangement[row][col] = seatData[col];
+                }
                 row++;
             }
         } catch (IOException e) {
-            System.out.println("\nError loading seats: " + e.getMessage());
-        }
-    }
-
-    public void saveSeatsToFile(String filename) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
-            for (String[] row : seatArrangement) {
-                writer.write(String.join(" ", row));
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            System.out.println("\nError saving seats: " + e.getMessage());
+            System.out.println("Error reading seat data from file: " + e.getMessage());
         }
     }
 
@@ -93,5 +89,46 @@ public class Seats extends Tickets {
 
     public int getRegSeats() {
         return REGseats;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        Seats seats = new Seats(10, 20, 10, 20, 5, 5);
+
+        System.out.println("Enter your choice: 3");
+        System.out.println("[1] - VIP");
+        System.out.println("[2] - Regular");
+
+        System.out.print("Select Ticket Type: ");
+        int ticketType = scanner.nextInt();
+        System.out.print("Number of tickets(Max 5): ");
+        int numTickets = scanner.nextInt();
+
+        for (int i = 0; i < numTickets; i++) {
+            boolean booked = false;
+            while (!booked) {
+                System.out.print("Preferred row and column 1 (e.g., 1 2): ");
+                int row = scanner.nextInt() - 1;
+                int col = scanner.nextInt() - 1;
+
+                if (ticketType == 1) {
+                    if (row >= 0 && row < 2) {
+                        booked = seats.bookSeat(row, col, 1);
+                    } else {
+                        System.out.println("Invalid row for VIP seats. Please choose a row between 1 and 2.");
+                    }
+                } else if (ticketType == 2) {
+                    if (row >= 2 && row < 5) {
+                        booked = seats.bookSeat(row, col, 2);
+                    } else {
+                        System.out.println("Invalid row for Regular seats. Please choose a row between 3 and 5.");
+                    }
+                }
+            }
+            System.out.println("Ticket " + (i + 1) + " booked successfully.");
+        }
+
+        seats.displaySeats();
     }
 }

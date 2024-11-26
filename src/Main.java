@@ -7,8 +7,8 @@ public class Main {
         Queueing queue = new Queueing();
         boolean isRunning = true;
 
-        Seats seats = new Seats(5000, 3500, 10, 15, 5, 5);
-        seats.loadSeatsFromFile("src/seats.txt");
+        Seats seats = new Seats(5000, 3500, 10, 15, 5, 5); 
+        seats.loadSeatsFromFile("seats.txt");
 
         while (isRunning) {
             System.out.println("\n*************************************");
@@ -95,10 +95,25 @@ public class Main {
                                             System.out.println("[2] - Regular");
                                             System.out.print("\nSelect Ticket Type: ");
                                             int ticketType = sc.nextInt();
-                                            if (seats.bookSeat(ticketType)) {
-                                                System.out.println((ticketType == 1 ? "\nVIP" : "\nRegular") + " seat booked successfully!");
+                                            if (ticketType == 1 || ticketType == 2) {
+                                                System.out.print("\nNumber of tickets(Max 5): ");
+                                                int numTickets = sc.nextInt();
+                                                if (numTickets > 5) {
+                                                    System.out.println("\nError: Maximum purchase reached.");
+                                                } else {
+                                                    for (int i = 0; i < numTickets; i++) {
+                                                        System.out.print("\nPreferred row and column " + (i + 1) + " (e.g., 1 2): ");
+                                                        int row = sc.nextInt() - 1; 
+                                                        int col = sc.nextInt() - 1;
+                                                        if (seats.bookSeat(row, col, ticketType)) {
+                                                            System.out.println("\nTicket " + (i + 1) + " booked successfully.");
+                                                        } else {
+                                                            System.out.println("\nBooking failed for ticket " + (i + 1) + ". Try another seat.");
+                                                        }
+                                                    }
+                                                }
                                             } else {
-                                                System.out.println("\nBooking failed. No seats available.");
+                                                System.out.println("\nInvalid ticket type.");
                                             }
                                             break;
                                         case 4:
@@ -123,22 +138,16 @@ public class Main {
                     String newUsername = sc.nextLine();
                     System.out.print("Enter new password: ");
                     String newPassword = sc.nextLine();
-
-                    if (accountManager.createAccount(newUsername, newPassword)) {
-                        System.out.println("\nAccount created successfully. Please log in.");
-                    } else {
-                        System.out.println("\nUsername already exists. Try a different username.");
-                    }
+                    accountManager.addUser(newUsername, newPassword);
                     break;
                 case 3:
-                    System.out.println("\nExiting the system...");
-                    seats.saveSeatsToFile("src/seats.txt");
                     isRunning = false;
                     break;
                 default:
-                    System.out.println("\nInvalid: Please try again.");
+                    System.out.println("\nInvalid: Try again.");
             }
         }
+
         sc.close();
     }
 }
